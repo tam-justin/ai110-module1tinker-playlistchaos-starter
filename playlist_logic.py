@@ -58,24 +58,15 @@ def normalize_song(raw: Song) -> Song:
 
 
 def classify_song(song: Song, profile: Dict[str, object]) -> str:
-    """Return a mood label given a song and user profile."""
+    """Return a mood label based purely on the song's energy thresholds."""
     energy = song.get("energy", 0)
-    genre = song.get("genre", "")
-    title = song.get("title", "")
 
     hype_min_energy = profile.get("hype_min_energy", 7)
     chill_max_energy = profile.get("chill_max_energy", 3)
-    favorite_genre = profile.get("favorite_genre", "")
 
-    hype_keywords = ["rock", "punk", "party"]
-    chill_keywords = ["lofi", "ambient", "sleep"]
-
-    is_hype_keyword = any(k in genre for k in hype_keywords)
-    is_chill_keyword = any(k in title for k in chill_keywords)
-
-    if genre == favorite_genre or energy >= hype_min_energy or is_hype_keyword:
+    if energy >= hype_min_energy:
         return "Hype"
-    if energy <= chill_max_energy or is_chill_keyword:
+    if energy <= chill_max_energy:
         return "Chill"
     return "Mixed"
 
@@ -116,12 +107,12 @@ def compute_playlist_stats(playlists: PlaylistMap) -> Dict[str, object]:
     chill = playlists.get("Chill", [])
     mixed = playlists.get("Mixed", [])
 
-    total = len(hype)
+    total = len(all_songs)
     hype_ratio = len(hype) / total if total > 0 else 0.0
 
     avg_energy = 0.0
     if all_songs:
-        total_energy = sum(song.get("energy", 0) for song in hype)
+        total_energy = sum(song.get("energy", 0) for song in all_songs)
         avg_energy = total_energy / len(all_songs)
 
     top_artist, top_count = most_common_artist(all_songs)
